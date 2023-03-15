@@ -3,7 +3,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from dython.nominal import associations
-from pathlib import Path  
+from datetime import datetime
 
 class Data_analyzer:
   def __init__(self, data_path) -> None:
@@ -34,7 +34,9 @@ class Data_analyzer:
 
     self.replace_nan_values()
 
-    self.set_continuous_variables_as_numbers()    
+    self.set_continuous_variables_as_numbers()
+
+    self.set_dates_column_as_date()
   
   def create_data_dictionary(self):
 
@@ -160,6 +162,9 @@ class Data_analyzer:
     self.salary_survey_data.col_5.fillna(0, inplace=True)
     self.salary_survey_data.col_6.fillna(0, inplace=True)
     self.salary_survey_data.fillna('-99', inplace=True)
+  
+  def set_dates_column_as_date(self):
+    self.salary_survey_data.col_0 = pd.to_datetime(arg=self.salary_survey_data.col_0, format='%m/%d/%Y %H:%M:%S')
   
   def create_correlation_matrix(self):
     salary_survey_features_names = [*self.categorical_variables_names, *self.continuous_variables_names]
@@ -291,4 +296,4 @@ class Data_analyzer:
       bar_plot.set_xticklabels([self.categorical_short_description[x_cat].answers[label] for label in bar_plot.get_xticklabels() ])
 
   def create_new_subset(self, data_name:str, data_extractor, use_full_set:bool=False, subset_name:str=''):
-    self.subset_data[data_name] = data_extractor(self.salary_survey_data) if use_full_set else data_extractor(self.subset_data[subset_name])
+    self.subset_data[data_name] = pd.DataFrame(data_extractor(self.salary_survey_data) if use_full_set else data_extractor(self.subset_data[subset_name]))
