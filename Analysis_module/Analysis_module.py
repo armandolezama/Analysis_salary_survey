@@ -263,14 +263,14 @@ class Data_analyzer:
         crosstab_instance = self.create_crosstab_instance(x_cat=x_var, y_cat=y_var, use_full_data=use_full_data, data_name=data_name)
         crosstab_instance.plot(kind='bar', stacked=True, ax=ax_instance)
 
-  def create_box_plot(self, ax_instance, x_cat, y_cont, use_full_data:bool = False, data_subset:str = ''):
+  def create_box_plot(self, ax_instance:plt.Axes = None, x_cat:str = '', y_cont:str = '', use_full_data:bool = False, data_subset:str = ''):
     boxplot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
     boxplot = sns.countplot(data=boxplot_data, x = x_cat, y = y_cont, ax=ax_instance)
     boxplot.set(ylabel='', xlabel='')
     boxplot.set_title(' boxplot')
     boxplot.set_xticklabels()
 
-  def create_violin_plot(self, ax_instance, x_cat, y_cont, use_full_data:bool = False, data_subset:str = ''):
+  def create_violin_plot(self, ax_instance:plt.Axes = None, x_cat:str = '', y_cont:str = '', use_full_data:bool = False, data_subset:str = ''):
     violin_plot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
     violin_plot = sns.violinplot(data=pd.DataFrame(violin_plot_data), x=x_cat, y=y_cont, ax=ax_instance)
 
@@ -282,13 +282,13 @@ class Data_analyzer:
     violin_plot.set_title('violin plot')
     violin_plot.set_xticklabels()
 
-  def create_bar_plot(self, ax_instance, x_cat, use_full_data:bool = False, data_subset:str = ''):
+  def create_bar_plot(self, ax_instance:plt.Axes = None, x_cat:str = '', use_full_data:bool = False, data_subset:str = ''):
     bar_plot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
     bar_plot = sns.countplot(data=bar_plot_data, x = x_cat, ax=ax_instance)
     bar_plot.set(xlabel='')
     bar_plot.set_title(' bar plot')
-    bar_plot.set_xticklabels()
-
+    if x_cat in self.categorical_short_description:
+      bar_plot.set_xticklabels([self.categorical_short_description[x_cat].answers[label] for label in bar_plot.get_xticklabels() ])
 
   def create_new_subset(self, data_name:str, data_extractor, use_full_set:bool=False, subset_name:str=''):
     self.subset_data[data_name] = data_extractor(self.salary_survey_data) if use_full_set else data_extractor(self.subset_data[subset_name])
