@@ -297,3 +297,7 @@ class Data_analyzer:
 
   def create_new_subset(self, data_name:str, data_extractor, use_full_set:bool=False, subset_name:str=''):
     self.subset_data[data_name] = pd.DataFrame(data_extractor(self.salary_survey_data) if use_full_set else data_extractor(self.subset_data[subset_name]))
+
+  def get_unique_dates(self, use_full_set:bool=False, subset_name:str=''):
+    sample_dates = self.salary_survey_data if(use_full_set) else self.subset_data[subset_name]
+    return sample_dates.col_0.dt.strftime('%Y-%m-%d').unique()
