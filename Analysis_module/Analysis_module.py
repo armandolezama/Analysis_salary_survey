@@ -3,7 +3,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from dython.nominal import associations
-from datetime import datetime
+from Analysis_module.currency_data import cad_to_usd, gbp_to_usd, eur_to_usd, aud_to_usd
 
 class Data_analyzer:
   def __init__(self, data_path) -> None:
@@ -14,6 +14,12 @@ class Data_analyzer:
     self.categorical_variables_names:list = []
     self.continuous_variables_names:list = []
     self.categorical_short_description:list = []
+    self.currencies_values_by_date:list =  {
+      'cad_to_usd': cad_to_usd,
+      'gbp_to_usd': gbp_to_usd,
+      'eur_to_usd': eur_to_usd,
+      'aud_to_usd': aud_to_usd,
+    }
 
     #This variable will contain references to any subset created
     self.subset_data:dict = {}
