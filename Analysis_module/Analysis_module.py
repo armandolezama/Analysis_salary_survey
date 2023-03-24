@@ -274,12 +274,13 @@ class Data_analyzer:
         crosstab_instance = self.create_crosstab_instance(x_cat=x_var, y_cat=y_var, use_full_data=use_full_data, data_name=data_name)
         crosstab_instance.plot(kind='bar', stacked=True, ax=ax_instance)
 
-  def create_box_plot(self, ax_instance:plt.Axes = None, x_cat:str = '', y_cont:str = '', use_full_data:bool = False, data_subset:str = ''):
+  def create_box_plot(self, ax_instance:plt.Axes = None, x_cat:str = None, y_cont:str = None, use_full_data:bool = False, data_subset:str = ''):
     boxplot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
-    boxplot = sns.countplot(data=boxplot_data, x = x_cat, y = y_cont, ax=ax_instance)
+    boxplot = sns.boxplot(data=boxplot_data, x = x_cat, y = y_cont, ax=ax_instance)
     boxplot.set(ylabel='', xlabel='')
     boxplot.set_title(' boxplot')
-    boxplot.set_xticklabels()
+    if x_cat in self.categorical_short_description:
+      boxplot.set_xticklabels([self.categorical_short_description[x_cat].answers[label] for label in boxplot.get_xticklabels()])
 
   def create_violin_plot(self, ax_instance:plt.Axes = None, x_cat:str = '', y_cont:str = '', use_full_data:bool = False, data_subset:str = ''):
     violin_plot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
@@ -299,7 +300,7 @@ class Data_analyzer:
     bar_plot.set(xlabel='')
     bar_plot.set_title(' bar plot')
     if x_cat in self.categorical_short_description:
-      bar_plot.set_xticklabels([self.categorical_short_description[x_cat].answers[label] for label in bar_plot.get_xticklabels() ])
+      bar_plot.set_xticklabels([self.categorical_short_description[x_cat].answers[label] for label in bar_plot.get_xticklabels()])
 
   def create_new_subset(self, data_name:str, data_extractor, use_full_set:bool=False, subset_name:str=''):
     self.subset_data[data_name] = pd.DataFrame(data_extractor(self.salary_survey_data) if use_full_set else data_extractor(self.subset_data[subset_name]))
@@ -307,3 +308,36 @@ class Data_analyzer:
   def get_unique_dates(self, use_full_set:bool=False, subset_name:str=''):
     sample_dates = self.salary_survey_data if(use_full_set) else self.subset_data[subset_name]
     return sample_dates.col_0.dt.strftime('%Y-%m-%d').unique()
+
+  def create_and_set_transformed_salary(self, data_set, currency_rate):
+    getted_data = self.subset_data[data_set]
+
+    fixed_salary = []
+
+    for row in getted_data.index:
+        
+      date_object = getted_data.col_0[row]
+
+      salary_in_base_currency = getted_data.col_5[row]
+
+      year = date_object.year
+      month = date_object.month if date_object.month > 9 else f'0{date_object.month}'
+      day = date_object.day if date_object.day > 9 else f'0{date_object.day}'
+
+      row_date = f'{year}-{month}-{day}'
+
+      value = self.currencies_values_by_date[currency_rate][row_date]
+
+      fixed_salary = [*fixed_salary, (value * salary_in_base_currency)]
+    
+    getted_data['col_18'] = fixed_salary
+
+  def merge_subsets(self, set_name):
+    self.subset_data[set_name] = pd.concat(
+      [
+      self.subset_data['usd_salary_group'],
+      self.subset_data['cad_group'],
+      self.subset_data['gbp_group'],
+      self.subset_data['eur_group'],
+      self.subset_data['aud_group'],
+    ])
