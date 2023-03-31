@@ -228,7 +228,7 @@ class Data_analyzer:
       crosstab_instance = pd.crosstab(self.salary_survey_data[x_cat], self.salary_survey_data[y_cat])
     else:
       crosstab_instance = pd.crosstab(self.subset_data[data_name][x_cat], self.subset_data[data_name][y_cat])
-    
+
     crosstab_instance.rename(
       index=self.categorical_short_description[x_cat]['answers'],
       columns=self.categorical_short_description[y_cat]['answers'],
@@ -274,15 +274,21 @@ class Data_analyzer:
         crosstab_instance = self.create_crosstab_instance(x_cat=x_var, y_cat=y_var, use_full_data=use_full_data, data_name=data_name)
         crosstab_instance.plot(kind='bar', stacked=True, ax=ax_instance)
 
-  def create_box_plot(self, ax_instance:plt.Axes = None, x_cat:str = None, y_cont:str = None, use_full_data:bool = False, data_subset:str = ''):
+  def create_box_plot(
+      self, ax_instance:plt.Axes = None, x_cat:str = None, y_cont:str = None, 
+      use_full_data:bool = False, data_subset:str = '', x_label:str='', y_label:str='', title:str='',
+    ):
     boxplot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
     boxplot = sns.boxplot(data=boxplot_data, x = x_cat, y = y_cont, ax=ax_instance)
-    boxplot.set(ylabel='', xlabel='')
-    boxplot.set_title(' boxplot')
+    boxplot.set(ylabel=y_label, xlabel=x_label)
+    boxplot.set_title(title)
     if x_cat in self.categorical_short_description:
       boxplot.set_xticklabels([self.categorical_short_description[x_cat].answers[label] for label in boxplot.get_xticklabels()])
 
-  def create_violin_plot(self, ax_instance:plt.Axes = None, x_cat:str = '', y_cont:str = '', use_full_data:bool = False, data_subset:str = ''):
+  def create_violin_plot(
+      self, ax_instance:plt.Axes = None, x_cat:str = '', y_cont:str = '', 
+      use_full_data:bool = False, data_subset:str = '',x_label:str='', y_label:str='', title:str='',
+    ):
     violin_plot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
     violin_plot = sns.violinplot(data=pd.DataFrame(violin_plot_data), x=x_cat, y=y_cont, ax=ax_instance)
 
@@ -290,15 +296,18 @@ class Data_analyzer:
     # For x or y tick labels use self.categorical_short_description[index].answers and
     # get answer using current x tick labels
     
-    violin_plot.set(ylabel='', xlabel='')
-    violin_plot.set_title('violin plot')
-    violin_plot.set_xticklabels()
+    violin_plot.set(ylabel=y_label, xlabel=x_label)
+    violin_plot.set_title(title)
+    if x_cat in self.categorical_short_description:
+      violin_plot.set_xticklabels([self.categorical_short_description[x_cat].answers[label] for label in boxplot.get_xticklabels()])
 
-  def create_bar_plot(self, ax_instance:plt.Axes = None, x_cat:str = '', use_full_data:bool = False, data_subset:str = ''):
+  def create_bar_plot(
+      self, ax_instance:plt.Axes = None, x_cat:str = '', 
+      use_full_data:bool = False, data_subset:str = '', x_label:str='', title:str=''):
     bar_plot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
     bar_plot = sns.countplot(data=bar_plot_data, x = x_cat, ax=ax_instance)
-    bar_plot.set(xlabel='')
-    bar_plot.set_title(' bar plot')
+    bar_plot.set(xlabel=x_label)
+    bar_plot.set_title(title)
     if x_cat in self.categorical_short_description:
       bar_plot.set_xticklabels([self.categorical_short_description[x_cat].answers[label] for label in bar_plot.get_xticklabels()])
 
