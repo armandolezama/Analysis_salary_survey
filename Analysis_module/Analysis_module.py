@@ -283,7 +283,7 @@ class Data_analyzer:
     boxplot.set(ylabel=y_label, xlabel=x_label)
     boxplot.set_title(title)
     if x_cat in self.categorical_short_description:
-      boxplot.set_xticklabels([self.categorical_short_description[x_cat].answers[label] for label in boxplot.get_xticklabels()])
+      boxplot.set_xticklabels([self.categorical_short_description[x_cat]['answers'][label.get_text()] for label in boxplot.get_xticklabels()])
 
   def create_violin_plot(
       self, ax_instance:plt.Axes = None, x_cat:str = '', y_cont:str = '', 
@@ -299,7 +299,7 @@ class Data_analyzer:
     violin_plot.set(ylabel=y_label, xlabel=x_label)
     violin_plot.set_title(title)
     if x_cat in self.categorical_short_description:
-      violin_plot.set_xticklabels([self.categorical_short_description[x_cat].answers[label] for label in boxplot.get_xticklabels()])
+      violin_plot.set_xticklabels([self.categorical_short_description[x_cat]['answers'][label.get_text()] for label in boxplot.get_xticklabels()])
 
   def create_bar_plot(
       self, ax_instance:plt.Axes = None, x_cat:str = '', 
@@ -309,7 +309,7 @@ class Data_analyzer:
     bar_plot.set(xlabel=x_label)
     bar_plot.set_title(title)
     if x_cat in self.categorical_short_description:
-      bar_plot.set_xticklabels([self.categorical_short_description[x_cat].answers[label] for label in bar_plot.get_xticklabels()])
+      bar_plot.set_xticklabels([self.categorical_short_description[x_cat]['answers'][label.get_text()] for label in bar_plot.get_xticklabels()])
 
   def create_new_subset(self, data_name:str, data_extractor, use_full_set:bool=False, subset_name:str=''):
     self.subset_data[data_name] = pd.DataFrame(data_extractor(self.salary_survey_data) if use_full_set else data_extractor(self.subset_data[subset_name]))
