@@ -299,7 +299,7 @@ class Data_analyzer:
     violin_plot.set(ylabel=y_label, xlabel=x_label)
     violin_plot.set_title(title)
     if x_cat in self.categorical_short_description:
-      violin_plot.set_xticklabels([self.categorical_short_description[x_cat]['answers'][label.get_text()] for label in boxplot.get_xticklabels()])
+      violin_plot.set_xticklabels([self.categorical_short_description[x_cat]['answers'][label.get_text()] for label in violin_plot.get_xticklabels()])
 
   def create_bar_plot(
       self, ax_instance:plt.Axes = None, x_cat:str = '', 
