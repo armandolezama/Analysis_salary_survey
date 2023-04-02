@@ -341,12 +341,6 @@ class Data_analyzer:
     
     getted_data['col_18'] = fixed_salary
 
-  def merge_subsets(self, set_name):
-    self.subset_data[set_name] = pd.concat(
-      [
-      self.subset_data['usd_salary_group'],
-      self.subset_data['cad_group'],
-      self.subset_data['gbp_group'],
-      self.subset_data['eur_group'],
-      self.subset_data['aud_group'],
-    ])
+  def merge_subsets(self, set_name:str='', sets_to_be_merged:list=[]):
+    subsets_list = [self.subset_data[set_name] for set_name in sets_to_be_merged]
+    self.subset_data[set_name] = pd.concat(subsets_list)
