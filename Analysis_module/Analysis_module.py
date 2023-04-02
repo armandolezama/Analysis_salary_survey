@@ -310,6 +310,15 @@ class Data_analyzer:
     bar_plot.set_title(title)
     if x_cat in self.categorical_short_description:
       bar_plot.set_xticklabels([self.categorical_short_description[x_cat]['answers'][label.get_text()] for label in bar_plot.get_xticklabels()])
+  
+  def create_histogram( self, y_cont:str = '', use_full_data:bool = False, data_subset:str = ''):
+    histogram_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
+    y_var = histogram_data[y_cont]
+    y_var_figure = plt.figure()
+    y_var_plot = y_var_figure.add_subplot(111)
+    counts, bins, patches = y_var_plot.hist(x=y_var, bins=100)
+    plt.show()
+
 
   def create_new_subset(self, data_name:str, data_extractor, use_full_set:bool=False, subset_name:str=''):
     self.subset_data[data_name] = pd.DataFrame(data_extractor(self.salary_survey_data) if use_full_set else data_extractor(self.subset_data[subset_name]))
