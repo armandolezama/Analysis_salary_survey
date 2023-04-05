@@ -13,7 +13,8 @@ class Data_analyzer:
     self.salary_survey_colnames:dict = {}
     self.categorical_variables_names:list = []
     self.continuous_variables_names:list = []
-    self.categorical_short_description:list = []
+    self.categorical_short_description:dict = {}
+    self.continuous_short_description:dict = {}
     self.currencies_values_by_date:list =  {
       'cad_to_usd': cad_to_usd,
       'gbp_to_usd': gbp_to_usd,
@@ -37,6 +38,8 @@ class Data_analyzer:
     self.set_continuous_variables_names()
 
     self.set_categorical_short_description()
+
+    self.set_continuous_short_description()
 
     self.replace_nan_values()
 
@@ -83,9 +86,20 @@ class Data_analyzer:
       self.salary_survey_colnames[self.original_colnames[5]],
       self.salary_survey_colnames[self.original_colnames[6]],
     ]
+
+  def set_continuous_short_description(self):
+    self.continuous_short_description = {
+      self.continuous_variables_names[0] : {
+        'name' : 'Annual salary',
+      },
+      self.continuous_variables_names[1] : {
+        'name' : 'Annual compensation',
+      },
+      'col_18' : 'Annual salary',
+    }
   
   def set_categorical_short_description(self):
-    self.categorical_short_description =  {
+    self.categorical_short_description = {
 
       self.categorical_variables_names[0] : {
         'name' : 'Age',
@@ -276,14 +290,15 @@ class Data_analyzer:
 
   def create_box_plot(
       self, ax_instance:plt.Axes = None, x_cat:str = None, y_cont:str = None, 
-      use_full_data:bool = False, data_subset:str = '', x_label:str='', y_label:str='', title:str='',
+      use_full_data:bool = False, data_subset:str = '', x_label:str='', y_label:str='',
     ):
     boxplot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
     boxplot = sns.boxplot(data=boxplot_data, x = x_cat, y = y_cont, ax=ax_instance)
     boxplot.set(ylabel=y_label, xlabel=x_label)
-    boxplot.set_title(title)
     if x_cat in self.categorical_short_description:
       boxplot.set_xticklabels([self.categorical_short_description[x_cat]['answers'][label.get_text()] for label in boxplot.get_xticklabels()])
+    if y_cont in self.continuous_short_description:
+      boxplot.set_title(f'{self.continuous_short_description[y_cont]} boxplot')
 
   def create_violin_plot(
       self, ax_instance:plt.Axes = None, x_cat:str = '', y_cont:str = '', 
@@ -291,25 +306,63 @@ class Data_analyzer:
     ):
     violin_plot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
     violin_plot = sns.violinplot(data=pd.DataFrame(violin_plot_data), x=x_cat, y=y_cont, ax=ax_instance)
-
-    # For title and labels use self.categorical_short_description
-    # For x or y tick labels use self.categorical_short_description[index].answers and
-    # get answer using current x tick labels
     
     violin_plot.set(ylabel=y_label, xlabel=x_label)
-    violin_plot.set_title(title)
     if x_cat in self.categorical_short_description:
       violin_plot.set_xticklabels([self.categorical_short_description[x_cat]['answers'][label.get_text()] for label in violin_plot.get_xticklabels()])
+    if y_cont in self.continuous_short_description:
+      violin_plot.set_title(f'{self.continuous_short_description[y_cont]} violin plot')
 
   def create_bar_plot(
       self, ax_instance:plt.Axes = None, x_cat:str = '', 
-      use_full_data:bool = False, data_subset:str = '', x_label:str='', title:str=''):
+      use_full_data:bool = False, data_subset:str = '', x_label:str=''):
     bar_plot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
     bar_plot = sns.countplot(data=bar_plot_data, x = x_cat, ax=ax_instance)
     bar_plot.set(xlabel=x_label)
-    bar_plot.set_title(title)
     if x_cat in self.categorical_short_description:
       bar_plot.set_xticklabels([self.categorical_short_description[x_cat]['answers'][label.get_text()] for label in bar_plot.get_xticklabels()])
+      bar_plot.set_title(f"{self.categorical_short_description[x_cat]['name']} barplot")
+  
+  def create_multiplot(self, grid:list = [], use_full_data:bool = False, data_name:str = ''):
+
+    grid_len = range(len(grid))
+
+    if(isinstance(grid[0], list)):
+      fig, ax = plt.subplots(len(grid), len(grid[0]), figsize=(25, 20))
+      print(ax)
+      for nested_list_index in grid_len:
+        nested_list = grid[nested_list_index]
+        for nested_config_index in range(len(nested_list)):
+          plot_config = grid[nested_list_index][nested_config_index]
+          print(plot_config)
+          self.multiplot_selector(config={**plot_config, 'use_full_data' : use_full_data, 'data_name' : data_name}, ax_instance=ax[[nested_list_index][nested_config_index]])
+    else:
+      fig, ax = plt.subplots(1, len(grid), figsize=(25, 20))
+      print(ax)
+      for nested_config_index in grid_len:
+        print(grid[nested_config_index])
+        self.multiplot_selector(config={**grid[nested_config_index], 'use_full_data' : use_full_data, 'data_name' : data_name}, ax_instance=ax[nested_config_index])
+    
+    return ax
+
+  def multiplot_selector(self, config, ax_instance):
+    print(config)
+    print(ax_instance)
+    if(config['graph_name'] == 'box'):
+      self.create_box_plot(
+        ax_instance = ax_instance or None, x_cat = config['x_cat'] or None, y_cont = config['y_cont'] or None, 
+        use_full_data = config['use_full_data'] or None, data_subset = config['data_name'] or None, x_label = config['x_label'] or None, y_label = config['y_label'] or None,
+      )
+    elif(config['graph_name'] == 'violin'):
+      self.create_violin_plot(
+        ax_instance = ax_instance or None, x_cat = config['x_cat'] or None, y_cont = config['y_cont'] or None, 
+        use_full_data = config['use_full_data'] or None, data_subset = config['data_name'] or None, x_label = config['x_label'] or None, y_label = config['y_label'] or None,
+      )
+    elif(config['graph_name'] == 'bar'):
+      self.create_bar_plot(
+        ax_instance = ax_instance or None, x_cat = config['x_cat'] or None,
+        use_full_data = config['use_full_data'] or None, data_subset = config['data_name'] or None, x_label = config['x_label'] or None,
+      )
   
   def create_histogram( self, y_cont:str = '', use_full_data:bool = False, data_subset:str = ''):
     histogram_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
@@ -318,7 +371,6 @@ class Data_analyzer:
     y_var_plot = y_var_figure.add_subplot(111)
     counts, bins, patches = y_var_plot.hist(x=y_var, bins=100)
     plt.show()
-
 
   def create_new_subset(self, data_name:str, data_extractor, use_full_set:bool=False, subset_name:str=''):
     self.subset_data[data_name] = pd.DataFrame(data_extractor(self.salary_survey_data) if use_full_set else data_extractor(self.subset_data[subset_name]))
