@@ -3,6 +3,8 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from dython.nominal import associations
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 from Analysis_module.currency_data import cad_to_usd, gbp_to_usd, eur_to_usd, aud_to_usd
 
 class Data_analyzer:
@@ -371,9 +373,38 @@ class Data_analyzer:
     y_var_plot = y_var_figure.add_subplot(111)
     counts, bins, patches = y_var_plot.hist(x=y_var, bins=100)
     plt.show()
+    return {
+      'intervals' : bins,
+      'frequencies': counts,
+      'mean': np.mean(y_var),
+      'median': np.median(y_var),
+      'std': np.std(y_var),
+    }
 
   def create_new_subset(self, data_name:str, data_extractor, use_full_set:bool=False, subset_name:str=''):
     self.subset_data[data_name] = pd.DataFrame(data_extractor(self.salary_survey_data) if use_full_set else data_extractor(self.subset_data[subset_name]))
+  
+  def create_encoded_subset(self, data: pd.DataFrame, colname, prefix):
+    col_hot_encoded = pd.get_dummies(data=data[colname], prefix=prefix)
+    data_encoded = pd.concat(objs=[data, col_hot_encoded], axis=1)
+    data_encoded.drop(colname, axis=1, inplace=True)
+    return data_encoded
+  
+  def standarize_subset(self, subset:pd.DataFrame):
+    scaler = StandardScaler()
+
+    return scaler.fit_transform(subset)
+  
+  def apply_PCA_to_subset(self, subset_name:str):
+    pca = PCA(n_components=15)
+
+    X_pca = pca.fit_transform(self.subset_data[subset_name])
+    return {
+    "principal_components":  pca.components_,
+    "explained_variance_ratio": pca.explained_variance_ratio_,
+    "eigenvalues": pca.explained_variance_,
+    "eigenvectors": pca.components_
+}
 
   def get_unique_dates(self, use_full_set:bool=False, subset_name:str=''):
     sample_dates = self.salary_survey_data if(use_full_set) else self.subset_data[subset_name]
