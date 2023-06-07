@@ -395,8 +395,8 @@ class Data_analyzer:
 
     return scaler.fit_transform(subset)
   
-  def apply_PCA_to_subset(self, subset_name:str):
-    pca = PCA(n_components=15)
+  def apply_PCA_to_subset(self, subset_name:str, n_components):
+    pca = PCA(n_components=n_components)
 
     X_pca = pca.fit_transform(self.subset_data[subset_name])
     return {
@@ -404,7 +404,75 @@ class Data_analyzer:
     "explained_variance_ratio": pca.explained_variance_ratio_,
     "eigenvalues": pca.explained_variance_,
     "eigenvectors": pca.components_
-}
+  }
+
+  def plot_explained_variance(self, explained_variance_ratio):
+    plt.bar(range(len(explained_variance_ratio)), explained_variance_ratio)
+
+    plt.xlabel('Componente Principal')
+    plt.ylabel('Proporción de Varianza Explicada')
+
+    plt.title('Proporción de Varianza Explicada por Componente Principal')
+
+    plt.show()
+
+  def plot_principal_components(self, principal_components, ):
+
+    plt.figure(figsize=(8, 6))
+    plt.scatter(principal_components[:, 0], principal_components[:, 1])
+    plt.xlabel('First Principal Component')
+    plt.ylabel('Second Principal Component')
+    plt.title('Principal Components Scatter Plot')
+    plt.grid(True)
+    plt.show()
+
+  def plot_eigen_vectors(self, eigen_vectors):
+
+    plt.scatter(eigen_vectors[0], eigen_vectors[1])
+    plt.xlabel('Primer Vector Propio')
+    plt.ylabel('Segundo Vector Propio')
+    plt.title('Vectores Propios')
+    plt.show()
+
+  def plot_correlation_heatmap(self, data: pd.DataFrame, threshold: float):
+    
+    corr_matrix = data.corr()
+
+    mask = np.triu(np.ones_like(corr_matrix, dtype=bool))
+
+    plt.figure(figsize=(10, 8))
+
+    heatmap = sns.heatmap(corr_matrix, mask=mask, cmap="coolwarm", center=0, fmt=".2f")
+
+    full_data_dict:dict = {}
+
+    xticks_labels = heatmap.get_xticklabels()
+
+    for tickLabel_index in range(len(xticks_labels)):
+      full_data_dict[f'var_{tickLabel_index}'] = xticks_labels[tickLabel_index].get_text()
+
+    renamed_labels = full_data_dict.keys()
+
+    plt.xticks(range(len(renamed_labels)), renamed_labels, rotation=45, ha="right")
+    plt.yticks(range(len(renamed_labels)), renamed_labels)
+    plt.axvline(x=threshold, color="black", linestyle="--")
+    plt.axhline(y=threshold, color="black", linestyle="--")
+    plt.show()
+
+    return full_data_dict
+  
+  def get_correlated_variables(self, df, limit):
+
+    correlation_matrix = df.corr()
+
+    correlated_variables = []
+
+    for column in correlation_matrix.columns:
+        correlated_variables.extend(correlation_matrix[correlation_matrix[column] > limit].index.tolist())
+
+    correlated_variables = list(set(correlated_variables))
+
+    return correlated_variables
 
   def get_unique_dates(self, use_full_set:bool=False, subset_name:str=''):
     sample_dates = self.salary_survey_data if(use_full_set) else self.subset_data[subset_name]
