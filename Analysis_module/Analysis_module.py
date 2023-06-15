@@ -434,15 +434,15 @@ class Data_analyzer:
     plt.title('Vectores Propios')
     plt.show()
 
-  def plot_correlation_heatmap(self, data: pd.DataFrame, threshold: float):
+  def plot_correlation_heatmap(self, data: pd.DataFrame, threshold: float, use_mask: bool):
     
     corr_matrix = data.corr()
 
-    mask = np.triu(np.ones_like(corr_matrix, dtype=bool))
+    mask = np.triu(np.ones_like(corr_matrix, dtype=bool)) if use_mask else None
 
     plt.figure(figsize=(10, 8))
 
-    heatmap = sns.heatmap(corr_matrix, mask=mask, cmap="coolwarm", center=0, fmt=".2f")
+    heatmap = sns.heatmap(data=corr_matrix, mask=mask, cmap="coolwarm", center=0, fmt=".2f")
 
     full_data_dict:dict = {}
 
@@ -455,24 +455,22 @@ class Data_analyzer:
 
     plt.xticks(range(len(renamed_labels)), renamed_labels, rotation=45, ha="right")
     plt.yticks(range(len(renamed_labels)), renamed_labels)
-    plt.axvline(x=threshold, color="black", linestyle="--")
-    plt.axhline(y=threshold, color="black", linestyle="--")
     plt.show()
 
-    return full_data_dict
-  
-  def get_correlated_variables(self, df, limit):
+    # return full_data_dict
 
-    correlation_matrix = df.corr()
+    highly_correlated_vars = []
 
-    correlated_variables = []
+    for var1 in corr_matrix.columns:
+        for var2 in corr_matrix.columns:
+            
+            if var1 != var2 and (var1, var2) not in highly_correlated_vars and (var2, var1) not in highly_correlated_vars:
+                correlation = corr_matrix.loc[var1, var2]
+                if abs(correlation) >= threshold:
+                    
+                    highly_correlated_vars.append((var1, var2, correlation))
 
-    for column in correlation_matrix.columns:
-        correlated_variables.extend(correlation_matrix[correlation_matrix[column] > limit].index.tolist())
-
-    correlated_variables = list(set(correlated_variables))
-
-    return correlated_variables
+    return highly_correlated_vars
 
   def get_unique_dates(self, use_full_set:bool=False, subset_name:str=''):
     sample_dates = self.salary_survey_data if(use_full_set) else self.subset_data[subset_name]
