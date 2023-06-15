@@ -399,11 +399,24 @@ class Data_analyzer:
     pca = PCA(n_components=n_components)
 
     X_pca = pca.fit_transform(self.subset_data[subset_name])
+
+    components_variance = np.var(pca.components_, axis=0)
+
+    max_variance_indexes = np.argsort(components_variance)[::-1]
+
+    nombres_variables_max_varianza = self.subset_data[subset_name].columns[max_variance_indexes]
+
+    pca_variables = []
+
+    for variable in nombres_variables_max_varianza:
+        pca_variables.append(variable)
+
     return {
     "principal_components":  pca.components_,
     "explained_variance_ratio": pca.explained_variance_ratio_,
     "eigenvalues": pca.explained_variance_,
-    "eigenvectors": pca.components_
+    "eigenvectors": pca.components_,
+    "variable_names": pca_variables,
   }
 
   def plot_explained_variance(self, explained_variance_ratio):
