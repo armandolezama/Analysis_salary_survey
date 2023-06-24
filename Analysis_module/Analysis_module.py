@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from dython.nominal import associations
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
 from Analysis_module.currency_data import cad_to_usd, gbp_to_usd, eur_to_usd, aud_to_usd
 
 class Data_analyzer:
@@ -331,25 +334,19 @@ class Data_analyzer:
 
     if(isinstance(grid[0], list)):
       fig, ax = plt.subplots(len(grid), len(grid[0]), figsize=(25, 20))
-      print(ax)
       for nested_list_index in grid_len:
         nested_list = grid[nested_list_index]
         for nested_config_index in range(len(nested_list)):
           plot_config = grid[nested_list_index][nested_config_index]
-          print(plot_config)
           self.multiplot_selector(config={**plot_config, 'use_full_data' : use_full_data, 'data_name' : data_name}, ax_instance=ax[[nested_list_index][nested_config_index]])
     else:
       fig, ax = plt.subplots(1, len(grid), figsize=(25, 20))
-      print(ax)
       for nested_config_index in grid_len:
-        print(grid[nested_config_index])
         self.multiplot_selector(config={**grid[nested_config_index], 'use_full_data' : use_full_data, 'data_name' : data_name}, ax_instance=ax[nested_config_index])
     
     return ax
 
   def multiplot_selector(self, config, ax_instance):
-    print(config)
-    print(ax_instance)
     if(config['graph_name'] == 'box'):
       self.create_box_plot(
         ax_instance = ax_instance or None, x_cat = config['x_cat'] or None, y_cont = config['y_cont'] or None, 
@@ -515,3 +512,31 @@ class Data_analyzer:
   def merge_subsets(self, set_name:str='', sets_to_be_merged:list=[]):
     subsets_list = [self.subset_data[set_name] for set_name in sets_to_be_merged]
     self.subset_data[set_name] = pd.concat(subsets_list)
+
+  def run_multilinear_logistic_regression(self, x_vars: pd.DataFrame, y_var: pd.Series):
+    x_train, x_test, y_train, y_test = train_test_split(x_vars, y_var)
+
+    model = LinearRegression()
+
+    model.fit(x_train, y_train)
+
+    y_pred = model.predict(x_test)
+
+    r2_score = model.score(x_test, y_test)
+    mse = mean_squared_error(y_test, y_pred)
+
+    index = np.arange(len(y_test))
+
+    plt.scatter(index, y_test, color='blue', label='Valores reales')
+    plt.scatter(index, y_pred, color='red', label='Valores predichos')
+
+    plt.xlabel('Instancias')
+    plt.ylabel('Valores')
+    plt.title('Comparación de valores reales y predichos')
+
+    plt.legend()
+
+    plt.show()
+
+
+    return model, r2_score, mse
