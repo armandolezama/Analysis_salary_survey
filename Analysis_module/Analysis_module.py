@@ -387,10 +387,17 @@ class Data_analyzer:
     data_encoded.drop(colname, axis=1, inplace=True)
     return data_encoded
   
-  def standarize_subset(self, subset:pd.DataFrame):
+  def standarize_subset(self, subset: pd.Series):
     scaler = StandardScaler()
-
-    return scaler.fit_transform(subset)
+    subset_values = subset.values.reshape(-1, 1)
+    subset_scaled = scaler.fit_transform(subset_values)
+    return subset_scaled.flatten()
+  
+  def manual_standarize_subset(self, subset: pd.Series):
+    mean = subset.mean()
+    std = subset.std()
+    subset_scaled = (subset - mean) / std
+    return subset_scaled
   
   def apply_PCA_to_subset(self, subset_name:str, n_components):
     pca = PCA(n_components=n_components)
@@ -413,7 +420,7 @@ class Data_analyzer:
     "explained_variance_ratio": pca.explained_variance_ratio_,
     "eigenvalues": pca.explained_variance_,
     "eigenvectors": pca.components_,
-    "variable_names": pca_variables,
+    "variable_names": pca_variables[:n_components],
   }
 
   def plot_explained_variance(self, explained_variance_ratio):
@@ -520,23 +527,9 @@ class Data_analyzer:
 
     model.fit(x_train, y_train)
 
+    coeficientes = model.coef_
+    intercepto = model.intercept_
+    
     y_pred = model.predict(x_test)
 
-    r2_score = model.score(x_test, y_test)
-    mse = mean_squared_error(y_test, y_pred)
-
-    index = np.arange(len(y_test))
-
-    plt.scatter(index, y_test, color='blue', label='Valores reales')
-    plt.scatter(index, y_pred, color='red', label='Valores predichos')
-
-    plt.xlabel('Instancias')
-    plt.ylabel('Valores')
-    plt.title('Comparación de valores reales y predichos')
-
-    plt.legend()
-
-    plt.show()
-
-
-    return model, r2_score, mse
+    return coeficientes, intercepto, y_pred
