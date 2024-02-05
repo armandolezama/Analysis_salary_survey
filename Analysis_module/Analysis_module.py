@@ -533,3 +533,5 @@ class Data_analyzer:
     y_pred = model.predict(x_test)
 
     return coeficientes, intercepto, y_pred
+  
+  pass
