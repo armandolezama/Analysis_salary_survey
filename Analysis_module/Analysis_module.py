@@ -11,7 +11,7 @@ from sklearn.model_selection import train_test_split
 from Analysis_module.currency_data import cad_to_usd, gbp_to_usd, eur_to_usd, aud_to_usd
 
 class Data_analyzer:
-  def __init__(self, data_path) -> None:
+  def __init__(self, data_path, is_config_required = False) -> None:
     self.salary_survey_data:pd.DataFrame = pd.read_csv(data_path, sep=',')
     self.original_colnames:list = [*self.salary_survey_data.columns]
     self.data_dictionary:dict = {}
@@ -26,6 +26,7 @@ class Data_analyzer:
       'eur_to_usd': eur_to_usd,
       'aud_to_usd': aud_to_usd,
     }
+    self.is_config_required = is_config_required
 
     #This variable will contain references to any subset created
     self.subset_data:dict = {}
@@ -46,22 +47,24 @@ class Data_analyzer:
 
     self.set_continuous_short_description()
 
-    self.replace_nan_values()
+    if(self.is_config_required):
 
-    self.set_continuous_variables_as_numbers()
+      self.replace_nan_values()
 
-    self.set_dates_column_as_date()
+      self.set_continuous_variables_as_numbers()
+
+      self.set_dates_column_as_date()
   
   def create_data_dictionary(self):
 
     for col_index in range(len(self.original_colnames)):
-    
+
       resetted_col_name = f'col_{col_index}'
       original_name = self.original_colnames[col_index]
       col_values = self.salary_survey_data[self.original_colnames[col_index]].unique()
       frequencies = self.salary_survey_data[self.original_colnames[col_index]].value_counts()
       unique_count_values = len(col_values)
-      
+
       self.data_dictionary[resetted_col_name] = {
         'original_name' : original_name,
         'values' : col_values,
@@ -70,7 +73,7 @@ class Data_analyzer:
       }
 
       self.salary_survey_colnames[self.original_colnames[col_index]] = resetted_col_name
-  
+
   def set_categorical_variables_names(self):
     self.categorical_variables_names = [
       self.salary_survey_colnames[self.original_colnames[1]],
@@ -102,7 +105,7 @@ class Data_analyzer:
       },
       'col_18' : 'Annual salary',
     }
-  
+
   def set_categorical_short_description(self):
     self.categorical_short_description = {
 
@@ -182,15 +185,15 @@ class Data_analyzer:
         'col_6': 'int64',
       }
     )
-  
+
   def replace_nan_values(self):
     self.salary_survey_data.col_5.fillna(0, inplace=True)
     self.salary_survey_data.col_6.fillna(0, inplace=True)
     self.salary_survey_data.fillna('-99', inplace=True)
-  
+
   def set_dates_column_as_date(self):
     self.salary_survey_data.col_0 = pd.to_datetime(arg=self.salary_survey_data.col_0, format='%m/%d/%Y %H:%M:%S')
-  
+
   def create_correlation_matrix(self):
     salary_survey_features_names = [*self.categorical_variables_names, *self.continuous_variables_names]
 
@@ -229,7 +232,7 @@ class Data_analyzer:
       ],
       figsize=(10,10)
     )
-  
+
   def get_sorted_data_dictionary(self, as_data_frame = True):
     created_df:pd.DataFrame
     if(as_data_frame):
@@ -239,7 +242,7 @@ class Data_analyzer:
       created_df = self.data_dictionary
 
     return created_df
-  
+
   def create_crosstab_instance(self, x_cat, y_cat, use_full_data:bool = False, data_name:str = ''):
     crosstab_instance:pd.DataFrame
 
@@ -261,7 +264,7 @@ class Data_analyzer:
     )
 
     return crosstab_instance
-  
+
   def create_multi_crosstabs(self, grid:list = [], use_full_data:bool = False, data_name:str = ''):
 
     crosstab_multiplot_fig = plt.figure(figsize = (30,25))
@@ -271,9 +274,9 @@ class Data_analyzer:
     if(isinstance(grid[0], list)):
 
       for nested_list_index in grid_len:
-      
+
         nested_list = grid[nested_list_index]
-      
+
         for nested_tuple_index in range(len(nested_list)):
 
           fixed_index = nested_tuple_index + 1
@@ -283,11 +286,11 @@ class Data_analyzer:
           x_var, y_var = nested_list[nested_tuple_index]
           crosstab_instance = self.create_crosstab_instance(x_cat=x_var, y_cat=y_var, use_full_data=use_full_data, data_name=data_name)
           crosstab_instance.plot(kind='bar', stacked=True, ax=ax_instance)
-  
+
     else:
 
       for nested_tuple_index in grid_len:
-      
+
         ax_instance = crosstab_multiplot_fig.add_subplot(1, len(grid), nested_tuple_index + 1)
         x_var, y_var = grid[nested_tuple_index]
         crosstab_instance = self.create_crosstab_instance(x_cat=x_var, y_cat=y_var, use_full_data=use_full_data, data_name=data_name)
@@ -311,7 +314,7 @@ class Data_analyzer:
     ):
     violin_plot_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
     violin_plot = sns.violinplot(data=pd.DataFrame(violin_plot_data), x=x_cat, y=y_cont, ax=ax_instance)
-    
+
     violin_plot.set(ylabel=y_label, xlabel=x_label)
     if x_cat in self.categorical_short_description:
       violin_plot.set_xticklabels([self.categorical_short_description[x_cat]['answers'][label.get_text()] for label in violin_plot.get_xticklabels()])
@@ -327,7 +330,7 @@ class Data_analyzer:
     if x_cat in self.categorical_short_description:
       bar_plot.set_xticklabels([self.categorical_short_description[x_cat]['answers'][label.get_text()] for label in bar_plot.get_xticklabels()])
       bar_plot.set_title(f"{self.categorical_short_description[x_cat]['name']} barplot")
-  
+
   def create_multiplot(self, grid:list = [], use_full_data:bool = False, data_name:str = ''):
 
     grid_len = range(len(grid))
@@ -343,7 +346,7 @@ class Data_analyzer:
       fig, ax = plt.subplots(1, len(grid), figsize=(25, 20))
       for nested_config_index in grid_len:
         self.multiplot_selector(config={**grid[nested_config_index], 'use_full_data' : use_full_data, 'data_name' : data_name}, ax_instance=ax[nested_config_index])
-    
+
     return ax
 
   def multiplot_selector(self, config, ax_instance):
@@ -362,7 +365,7 @@ class Data_analyzer:
         ax_instance = ax_instance or None, x_cat = config['x_cat'] or None,
         use_full_data = config['use_full_data'] or None, data_subset = config['data_name'] or None, x_label = config['x_label'] or None,
       )
-  
+
   def create_histogram( self, y_cont:str = '', use_full_data:bool = False, data_subset:str = ''):
     histogram_data = self.salary_survey_data if(use_full_data) else self.subset_data[data_subset]
     y_var = histogram_data[y_cont]
@@ -380,25 +383,25 @@ class Data_analyzer:
 
   def create_new_subset(self, data_name:str, data_extractor, use_full_set:bool=False, subset_name:str=''):
     self.subset_data[data_name] = pd.DataFrame(data_extractor(self.salary_survey_data) if use_full_set else data_extractor(self.subset_data[subset_name]))
-  
+
   def create_encoded_subset(self, data: pd.DataFrame, colname, prefix):
     col_hot_encoded = pd.get_dummies(data=data[colname], prefix=prefix)
     data_encoded = pd.concat(objs=[data, col_hot_encoded], axis=1)
     data_encoded.drop(colname, axis=1, inplace=True)
     return data_encoded
-  
+
   def standarize_subset(self, subset: pd.Series):
     scaler = StandardScaler()
     subset_values = subset.values.reshape(-1, 1)
     subset_scaled = scaler.fit_transform(subset_values)
     return subset_scaled.flatten()
-  
+
   def manual_standarize_subset(self, subset: pd.Series):
     mean = subset.mean()
     std = subset.std()
     subset_scaled = (subset - mean) / std
     return subset_scaled
-  
+
   def apply_PCA_to_subset(self, subset_name:str, n_components):
     pca = PCA(n_components=n_components)
 
@@ -452,7 +455,7 @@ class Data_analyzer:
     plt.show()
 
   def plot_correlation_heatmap(self, data: pd.DataFrame, threshold: float, use_mask: bool):
-    
+
     corr_matrix = data.corr()
 
     mask = np.triu(np.ones_like(corr_matrix, dtype=bool)) if use_mask else None
@@ -480,11 +483,11 @@ class Data_analyzer:
 
     for var1 in corr_matrix.columns:
         for var2 in corr_matrix.columns:
-            
+
             if var1 != var2 and (var1, var2) not in highly_correlated_vars and (var2, var1) not in highly_correlated_vars:
                 correlation = corr_matrix.loc[var1, var2]
                 if abs(correlation) >= threshold:
-                    
+
                     highly_correlated_vars.append((var1, var2, correlation))
 
     return highly_correlated_vars
@@ -499,7 +502,7 @@ class Data_analyzer:
     fixed_salary = []
 
     for row in getted_data.index:
-        
+
       date_object = getted_data.col_0[row]
 
       salary_in_base_currency = getted_data.col_5[row]
@@ -513,7 +516,7 @@ class Data_analyzer:
       value = self.currencies_values_by_date[currency_rate][row_date]
 
       fixed_salary = [*fixed_salary, (value * salary_in_base_currency)]
-    
+
     getted_data['col_18'] = fixed_salary
 
   def merge_subsets(self, set_name:str='', sets_to_be_merged:list=[]):
@@ -529,9 +532,9 @@ class Data_analyzer:
 
     coeficientes = model.coef_
     intercepto = model.intercept_
-    
+
     y_pred = model.predict(x_test)
 
     return coeficientes, intercepto, y_pred
-  
+
   pass
